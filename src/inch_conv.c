@@ -49,14 +49,12 @@ void inch_conv_conv(jl_t* jl, const char *PackageName) {
 	}
 	fp_filename[(boolean - k) - 1] = '\0';
 	jl_print(jl, "\tchar %s[]={", fp_filename);
-	SDL_Delay(1000);
-	jl_print(jl, "creating text...");
-	SDL_Delay(1000);
+	jl_print(jl, "Creating text...");
 	char printed[80];
 	jl_mem_format(printed, "\tchar %s[]={", fp_filename);
-	jl_print(jl, "adding text...\n");
+	jl_print(jl, "Adding text....");
 	inch_conv_add(jl, printed);
-	jl_print(jl, "adding data to file...");
+	jl_print(jl, "Adding data to file....");
 	// First Value
 	jl_mem_format(printed, "%d", input.data[0]);
 	inch_conv_add(jl, printed);

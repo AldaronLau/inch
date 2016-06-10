@@ -9,7 +9,7 @@
 char* inputfile = NULL;
 
 static void inch_init(jl_t* jl) {
-	char* zipfile = NULL;
+	char* zipfile;
 
 	jl_print(jl, "INCH: INclude C Header V0.3");
 	zipfile = inch_conv_package(jl, inputfile);
