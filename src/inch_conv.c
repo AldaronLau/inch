@@ -58,10 +58,10 @@ void inch_conv_conv(jl_t* jl, const char *PackageName) {
 	inch_conv_add(jl, printed);
 	jl_print(jl, "adding data to file...");
 	// First Value
-	jl_mem_format(printed, "%d", input.data[i]);
+	jl_mem_format(printed, "%d", input.data[0]);
 	inch_conv_add(jl, printed);
 	// Other Values
-	for(i = 0; i < input.size; i++) {
+	for(i = 1; i < input.size; i++) {
 		// Format the code
 		jl_mem_format(printed, ",%d", input.data[i]);
 		inch_conv_add(jl, printed);
@@ -79,8 +79,7 @@ void inch_conv_conv(jl_t* jl, const char *PackageName) {
 
 void inch_conv_save(jl_t* jl) {
 	inch_t* ctx = jl_get_context(jl);
-	char *save = malloc(100);
-	int i;
+	char save[100]; jl_mem_format(save, "!src/media/%s.h", fp_filename);
 	data_t VariableString; jl_data_init(jl, &VariableString, 0);
 	char append[80]; jl_mem_format(append, "\tchar %s[];", fp_filename);
 	uint64_t cursor = ctx->output.curs;
@@ -88,12 +87,6 @@ void inch_conv_save(jl_t* jl) {
 
 	jl_data_insert_data(jl, &VariableString, append, strlen(append));
 
-	for(i = 0; i < 100; i++) {
-		save[i] = '\0';
-	}
-	strcat(save, "!src/media/");
-	strcat(save, fp_filename);
-	strcat(save, ".h");
 	jl_print(jl, "Saving output to \"%s\"....", save);
 	jl_file_save(jl, output, save, cursor);
 	jl_print(jl, "");
@@ -107,5 +100,5 @@ void inch_conv_save(jl_t* jl) {
 
 void inch_conv_init(jl_t* jl) {
 	inch_t* ctx = jl_get_context(jl);
-	jl_data_init(jl, &ctx->output, 1);
+	jl_data_init(jl, &ctx->output, 0);
 }
