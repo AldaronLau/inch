@@ -15,7 +15,11 @@ static inline void inch_conv_add(jl_t* jl, const char* printed) {
 }
 
 char* inch_conv_package(jl_t* jl, const char* FolderName) {
-	return jl_file_pk_compress(jl, FolderName);
+	char* pk_compress;
+
+	pk_compress = jl_file_pk_compress(jl, FolderName);
+	jl_print(jl, "Compressed folder: %s -> %s.", FolderName, pk_compress);
+	return pk_compress;
 }
 
 void inch_conv_conv(jl_t* jl, const char *PackageName) {
@@ -27,9 +31,10 @@ void inch_conv_conv(jl_t* jl, const char *PackageName) {
 
 	// 
 	strcat((void*)file_name,(void*)PackageName);
-	jl_print(jl, "loading input file %s....", file_name);
+	jl_print_rewrite(jl, "loading input file %s [....]", file_name);
 	jl_file_load(jl, &input, file_name);
-	jl_print(jl, "loaded input file.");
+	jl_print_rewrite(jl, "loading input file %s [DONE]", file_name);
+	jl_print(jl, NULL);
 	char boolean = 0;
 	int k;
 	i = filename_size;
@@ -46,13 +51,9 @@ void inch_conv_conv(jl_t* jl, const char *PackageName) {
 		ctx->fp_filename[(i - k)] = PackageName[i];
 	}
 	ctx->fp_filename[(boolean - k)] = '\0';
-	jl_print(jl, "unsigned char %s[]={", ctx->fp_filename);
-	jl_print(jl, "Creating text...");
 	char* printed = jl_memi(jl, 80);
 	jl_mem_format(printed, "unsigned char %s[]={", ctx->fp_filename);
-	jl_print(jl, "Adding text....");
 	inch_conv_add(jl, printed);
-	jl_print(jl, "Adding data to file....");
 	// First Value
 	jl_mem_format(printed, "%d", input.data[0]);
 	inch_conv_add(jl, printed);
@@ -63,35 +64,28 @@ void inch_conv_conv(jl_t* jl, const char *PackageName) {
 		inch_conv_add(jl, printed);
 		// Notify % finished.
 		if(i%20 == 0) {
-			jl_print_rewrite(jl, "adding data : %4f%%",
+			jl_print_rewrite(jl, "Adding data to file [%4f%%]",
 				100.f * ((float)i) / ((float)input.size));
 		}
 	}
-	jl_print(jl, "added data!");
+	jl_print(jl, "Adding data to file [DONE]");
 	jl_mem_format(printed, "};");
 	inch_conv_add(jl, printed);
-	jl_print(jl, "Saving....");
 }
 
 void inch_conv_save(jl_t* jl) {
 	inch_t* ctx = jl_get_context(jl);
 	char save[100]; jl_mem_format(save, "!src/media/%s.h", ctx->fp_filename);
-	data_t VariableString; jl_data_init(jl, &VariableString, 0);
-	char append[80];
-		jl_mem_format(append, "unsigned char %s[];", ctx->fp_filename);
-	uint64_t cursor = ctx->output.curs;
 	char* output = jl_data_tostring(jl, &ctx->output);
 
-	jl_data_insert_data(jl, &VariableString, append, strlen(append));
-
-	jl_print(jl, "Saving output to \"%s\"....", save);
-	jl_file_save(jl, output, save, cursor);
+	jl_print_rewrite(jl, "Saving output to \"%s\" [....]", save);
+	jl_file_save(jl, output, save, ctx->output.curs);
+	jl_print(jl, "Saving output to \"%s\" [DONE]", save);
 	jl_print(jl, "");
 	jl_print(jl, "variables:");
 	jl_print(jl, "");
-	jl_print(jl, (char*)VariableString.data);
+	jl_print(jl, "\tunsigned char %s[];", ctx->fp_filename);
 	jl_print(jl, "");
-	jl_data_free(&VariableString);
 	return;
 }
 

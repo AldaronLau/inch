@@ -13,7 +13,6 @@ static void inch_init(jl_t* jl) {
 
 	jl_print(jl, "INCH: INclude media as C Header V0.3");
 	zipfile = inch_conv_package(jl, inputfile);
-	jl_print(jl, "Compressing folder: %s -> %s", inputfile, zipfile);
 	inch_conv_init(jl);
 	inch_conv_conv(jl, zipfile);
 	inch_conv_save(jl);
