@@ -11,7 +11,7 @@ char* inputfile = NULL;
 static void inch_init(jl_t* jl) {
 	char* zipfile;
 
-	jl_print(jl, "INCH: INclude media as C Header V0.3");
+	jl_print(jl, "INCH: INclude media as C Header V0.4");
 	zipfile = inch_conv_package(jl, inputfile);
 	inch_conv_init(jl);
 	inch_conv_conv(jl, zipfile);

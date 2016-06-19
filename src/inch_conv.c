@@ -26,7 +26,7 @@ void inch_conv_conv(jl_t* jl, const char *PackageName) {
 	int i;
 	data_t input;
 	char *file_name = jl_memi(jl, 100);
-	u32_t filename_size = strlen(PackageName);
+	uint32_t filename_size = strlen(PackageName);
 	inch_t* ctx = jl_get_context(jl);
 
 	// 
@@ -51,16 +51,13 @@ void inch_conv_conv(jl_t* jl, const char *PackageName) {
 		ctx->fp_filename[(i - k)] = PackageName[i];
 	}
 	ctx->fp_filename[(boolean - k)] = '\0';
-	char* printed = jl_memi(jl, 80);
-	jl_mem_format(printed, "unsigned char %s[]={", ctx->fp_filename);
-	inch_conv_add(jl, printed);
-	// First Value
-	jl_mem_format(printed, "%d", input.data[0]);
+	char printed[80];
+	jl_mem_format(printed, "unsigned char %s[]=\"", ctx->fp_filename);
 	inch_conv_add(jl, printed);
 	// Other Values
-	for(i = 1; i < input.size; i++) {
+	for(i = 0; i < input.size; i++) {
 		// Format the code
-		jl_mem_format(printed, ",%d", input.data[i]);
+		jl_mem_format(printed, "\\x%X", input.data[i]);
 		inch_conv_add(jl, printed);
 		// Notify % finished.
 		if(i%20 == 0) {
@@ -68,9 +65,10 @@ void inch_conv_conv(jl_t* jl, const char *PackageName) {
 				100.f * ((float)i) / ((float)input.size));
 		}
 	}
-	jl_print(jl, "Adding data to file [DONE]");
-	jl_mem_format(printed, "};");
+	jl_mem_format(printed, "\";size_t %s_size = %d;", ctx->fp_filename,
+		input.size);
 	inch_conv_add(jl, printed);
+	jl_print(jl, "Adding data to file [DONE]");
 }
 
 void inch_conv_save(jl_t* jl) {
