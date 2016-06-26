@@ -27,5 +27,5 @@ int main(int argc, char* argv[]) {
 	}
 	inputfile = argv[1];
 	if(inputfile[0] == '-') inputfile[0] = '!';
-	return jl_start(inch_init, jl_dont, "inch", sizeof(inch_t));
+	return jl_start(inch_init, "inch", sizeof(inch_t));
 }

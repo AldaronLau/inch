@@ -73,7 +73,7 @@ void inch_conv_conv(jl_t* jl, const char *PackageName) {
 
 void inch_conv_save(jl_t* jl) {
 	inch_t* ctx = jl_get_context(jl);
-	char save[100]; jl_mem_format(save, "!src/media/%s.h", ctx->fp_filename);
+	char save[100]; jl_mem_format(save, "!src/header/%s.h", ctx->fp_filename);
 	char* output = jl_data_tostring(jl, &ctx->output);
 
 	jl_print_rewrite(jl, "Saving output to \"%s\" [....]", save);
