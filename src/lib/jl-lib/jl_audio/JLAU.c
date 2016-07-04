@@ -7,8 +7,8 @@
  *	Audio
  * 		This library can play/record music/sound effects.
 */
-#include "jl_pr.h"
-#include "JLau.h"
+#include "JLprivate.h"
+#include "jlau.h"
 
 #define JLAU_DEBUG_CHECK(jlau) jlau_checkthread__(jlau)
 #define JLAU_CHANNEL_MUSIC -2

@@ -7,7 +7,7 @@
  *	A High Level Graphics Library that supports sprites, texture loading,
  *	2D rendering & 3D rendering.
  */
-#include "JLGRinternal.h"
+#include "JLGRprivate.h"
 
 typedef struct {
 	jl_vec3_t where[2];
@@ -21,13 +21,10 @@ typedef struct {
 	jl_gui_slider_draw draw;
 }jl_gui_slider_main;
 
-/***      @cond       ***/
-/************************/
-/*** Static Functions ***/
-/************************/
+/** @cond */
 
 static inline void _jlgr_init_vos(jlgr_t* jlgr) {
-	jl_gl_vo_init(jlgr, &jlgr->gr.vos.whole_screen);
+	jlgr_vo_init(jlgr, &jlgr->gr.vos.whole_screen);
 }
 
 static void _jlgr_popup_loop(jl_t *jl) {
@@ -45,10 +42,7 @@ static void _jlgr_textbox_cm(jlgr_t* jlgr, jlgr_input_t input) {
 		jlgr->gr.textbox_string->curs++;
 }
 
-/**      @endcond      **/
-/************************/
-/*** Global Functions ***/
-/************************/
+/** @endcond */
 
 void jlgr_dont(jlgr_t* jlgr) { }
 
@@ -60,16 +54,14 @@ void jlgr_dont(jlgr_t* jlgr) { }
  * @param i:  the ID of the image.
  * @param c: is 0 unless you want to use the image as
  * 	a charecter map, then it will zoom into charecter 'chr'.
- * @param a: the transparency each pixel is multiplied by; 1. is
- *	solid and 0. is totally invisble.
 **/
 void jlgr_fill_image_set(jlgr_t* jlgr, uint32_t tex, uint8_t w, uint8_t h, 
-	int16_t c, float a)
+	int16_t c)
 {
 	jl_rect_t rc = { 0., 0., 1., jl_gl_ar(jlgr) };
 
-	jlgr_vos_image(jlgr, &jlgr->gr.vos.whole_screen, rc, tex, a);
-	jl_gl_vo_txmap(jlgr, &jlgr->gr.vos.whole_screen, 0, 0, -1);
+	jlgr_vo_set_image(jlgr, &jlgr->gr.vos.whole_screen, rc, tex);
+	jlgr_vo_txmap(jlgr, &jlgr->gr.vos.whole_screen, 0, 0, -1);
 }
 
 /**
@@ -77,151 +69,11 @@ void jlgr_fill_image_set(jlgr_t* jlgr, uint32_t tex, uint8_t w, uint8_t h,
  * @param jl: The library context.
 **/
 void jlgr_fill_image_draw(jlgr_t* jlgr) {
-	jlgr_draw_vo(jlgr, &jlgr->gr.vos.whole_screen, NULL);
+	jlgr_vo_draw(jlgr, &jlgr->gr.vos.whole_screen, NULL);
 }
 
 /**
- * Draw a vertex object with offset by translation.
- * @param jl: The library context.
- * @param pv: The vertex object to draw.
- * @param vec: The vector of offset/translation.
-**/
-void jlgr_draw_vo(jlgr_t* jlgr, jl_vo_t* pv, jl_vec3_t* vec) {
-	if(vec == NULL) {
-		jl_gl_transform_vo_(jlgr, pv,
-			0.f, 0.f, 0.f, 1., 1., 1.);
-	}else{
-		jl_gl_transform_vo_(jlgr, pv,
-			vec->x, vec->y, vec->z, 1., 1., 1.);
-	}
-	jl_gl_draw(jlgr, pv);
-}
-
-/**
- * Set a Vertex object to vector graphics.
- * 
-**/
-void jlgr_vos_vec(jlgr_t* jlgr, jl_vo_t *pv, uint16_t tricount,
-	float* triangles, float* colors, uint8_t multicolor)
-{
-	// Overwrite the vertex object
-	jl_gl_vect(jlgr, pv, tricount * 3, triangles);
-	// Texture the vertex object
-	if(multicolor) jlgr_vo_color_gradient(jlgr, pv, colors);
-	else jlgr_vo_color_solid(jlgr, pv, colors);
-}
-
-/**
- * Set a vertex object to a rectangle.
- * @param jl: The library context.
- * @param pv: The vertex object
- * @param rc: The rectangle coordinates.
- * @param colors: The color(s) to use - [ R, G, B, A ]
- * @param multicolor: If 0: Then 1 color is used.
- *	If 1: Then 1 color per each vertex is used.
-**/
-void jlgr_vos_rec(jlgr_t* jlgr, jl_vo_t *pv, jl_rect_t rc, float* colors,
-	uint8_t multicolor)
-{
-	float rectangle_coords[] = {
-		rc.x,		rc.y + rc.h,	0.f,
-		rc.x,		rc.y,		0.f,
-		rc.x + rc.w,	rc.y,		0.f,
-		rc.x + rc.w,	rc.y + rc.h,	0.f };
-
-	// Overwrite the vertex object
-	jl_gl_poly(jlgr, pv, 4, rectangle_coords);
-	// Texture the vertex object
-	if(multicolor) jlgr_vo_color_gradient(jlgr, pv, colors);
-	else jlgr_vo_color_solid(jlgr, pv, colors);
-}
-
-/**
- * Set a vertex object to an Image.
- *
- * @param jl: The library context
- * @param pv: The vertex object
- * @param rc: the rectangle to draw the image in.
- * @param g: the image group that the image pointed to by 'i' is in.
- * @param i:  the ID of the image.
- * @param c: is 0 unless you want to use the image as
- * 	a charecter map, then it will zoom into charecter 'chr'.
- * @param a: the transparency each pixel is multiplied by; 1. is
- *	solid and 0. is totally invisble.
-**/
-void jlgr_vos_image(jlgr_t* jlgr, jl_vo_t *pv, jl_rect_t rc,
-	uint32_t tex, float a)
-{
-	//From bottom left & clockwise
-	float Oone[] = {
-		rc.x,		rc.y + rc.h,	0.f,
-		rc.x,		rc.y,		0.f,
-		rc.x + rc.w,	rc.y,		0.f,
-		rc.x + rc.w,	rc.y + rc.h,	0.f };
-	// Overwrite the vertex object
-	jl_gl_poly(jlgr, pv, 4, Oone);
-	// Texture the vertex object
-	jl_gl_txtr_(jlgr, pv, a, tex);
-}
-
-void jlgr_vos_texture(jlgr_t* jlgr, jl_vo_t *pv, jl_rect_t rc,
-	jl_tex_t* tex, float a)
-{
-	//From bottom left & clockwise
-	float Oone[] = {
-		rc.x,		rc.y + rc.h,	0.f,
-		rc.x,		rc.y,		0.f,
-		rc.x + rc.w,	rc.y,		0.f,
-		rc.x + rc.w,	rc.y + rc.h,	0.f };
-	// Overwrite the vertex object
-	jl_gl_poly(jlgr, pv, 4, Oone);
-	// Texture the vertex object
-	jl_gl_txtr_(jlgr, pv, a, tex->gl_texture);
-}
-
-/**
- * Free a vertex object.
- * @param jl: The library context
- * @param pv: The vertex object to free
-**/
-void jlgr_vo_old(jlgr_t* jlgr, jl_vo_t* pv) {
-	jl_gl_vo_free(jlgr, pv);
-}
-
-/**
- * Draw text on the current pre-renderer.
- * @param 'jl': library context
- * @param 'str': the text to draw
- * @param 'loc': the position to draw it at
- * @param 'f': the font to use.
-**/
-void jlgr_draw_text(jlgr_t* jlgr, const char* str, jl_vec3_t loc, jl_font_t f) {
-	if(str == NULL) return;
-
-	const uint8_t *text = (void*)str;
-	uint32_t i;
-	jl_rect_t rc = { loc.x, loc.y, f.size, f.size };
-	jl_vec3_t tr = { 0., 0., 0. };
-	jl_vo_t* vo = &jlgr->gl.temp_vo;
-
-	jlgr_vos_image(jlgr, vo, rc, jlgr->textures.font, 1.);
-	for(i = 0; i < strlen(str); i++) {
-		if(text[i] == '\n') {
-			tr.x = 0, tr.y += f.size;
-			continue;
-		}
-		//Font 0:0
-		jl_gl_vo_txmap(jlgr, vo, 16, 16, text[i]);
-		jl_gl_transform_chr_(jlgr, tr.x, tr.y, tr.z,
-			1., 1., 1.);
-		jl_gl_draw_chr(jlgr, vo, f.colors[0], f.colors[1], f.colors[2],
-			f.colors[3]);
-		tr.x += f.size;
-	}
-}
-
-/**
- * draw an integer on the screen
+ * Draw an integer on the screen
  * @param 'jl': library context
  * @param 'num': the number to draw
  * @param 'loc': the position to draw it at
@@ -230,7 +82,7 @@ void jlgr_draw_text(jlgr_t* jlgr, const char* str, jl_vec3_t loc, jl_font_t f) {
 void jlgr_draw_int(jlgr_t* jlgr, int64_t num, jl_vec3_t loc, jl_font_t f) {
 	char display[10];
 	sprintf(display, "%ld", (long int) num);
-	jlgr_draw_text(jlgr, display, loc, f);
+	jlgr_text_draw(jlgr, display, loc, f);
 }
 
 /**
@@ -249,7 +101,7 @@ void jlgr_draw_dec(jlgr_t* jlgr, double num, uint8_t dec, jl_vec3_t loc,
 
 	sprintf(convert, "%%%df", dec);
 	sprintf(display, convert, num);
-	jlgr_draw_text(jlgr, display, loc, f);
+	jlgr_text_draw(jlgr, display, loc, f);
 }
 
 /**
@@ -258,9 +110,9 @@ void jlgr_draw_dec(jlgr_t* jlgr, double num, uint8_t dec, jl_vec3_t loc,
  * @param 'spr': the boundary sprite
  * @param 'txt': the text to draw
 **/
-void jlgr_draw_text_area(jlgr_t* jlgr, jl_sprite_t * spr, str_t txt){
+void jlgr_text_draw_area(jlgr_t* jlgr, jl_sprite_t * spr, const char* txt) {
 	float fontsize = .9 / strlen(txt);
-	jlgr_draw_text(jlgr, txt,
+	jlgr_text_draw(jlgr, txt,
 		(jl_vec3_t) { .05,.5 * (jl_gl_ar(jlgr) - fontsize),0. },
 		(jl_font_t) { jlgr->textures.icon, 0, jlgr->fontcolor, 
 			fontsize});
@@ -272,10 +124,10 @@ void jlgr_draw_text_area(jlgr_t* jlgr, jl_sprite_t * spr, str_t txt){
  * @param 'spr': the boundary sprite
  * @param 'txt': the text to draw
 **/
-void jlgr_draw_text_sprite(jlgr_t* jlgr,jl_sprite_t * spr, str_t txt) {
-	jlgr_fill_image_set(jlgr, jlgr->textures.icon, 16, 16, 1, 1.);
+void jlgr_draw_text_sprite(jlgr_t* jlgr, jl_sprite_t* spr, const char* txt) {
+	jlgr_fill_image_set(jlgr, jlgr->textures.icon, 16, 16, 1);
 	jlgr_fill_image_draw(jlgr);
-	jlgr_draw_text_area(jlgr, spr, txt);
+	jlgr_text_draw_area(jlgr, spr, txt);
 }
 
 /**
@@ -286,7 +138,7 @@ void jlgr_draw_text_sprite(jlgr_t* jlgr,jl_sprite_t * spr, str_t txt) {
  * @param 'color': 1.f = opaque, 0.f = invisible
  */
 void jlgr_draw_ctxt(jlgr_t* jlgr, char *str, float yy, float* color) {
-	jlgr_draw_text(jlgr, str,
+	jlgr_text_draw(jlgr, str,
 		(jl_vec3_t) { 0., yy, 0. },
 		(jl_font_t) { jlgr->textures.icon, 0, color, 
 			1. / ((float)strlen(str))} );
@@ -347,20 +199,20 @@ static void jlgr_gui_slider_draw(jl_t* jl, uint8_t resize, void* data) {
 	float colors[] = { .06f, .04f, 0.f, 1.f };
 
 	jl_gl_clear(jlgr, .01, .08, 0., 1.);
-	jlgr_vos_image(jlgr, &(slider->vo[0]), rc, jlgr->textures.font, 1.);
-	jl_gl_vo_txmap(jlgr, &(slider->vo[0]), 	16, 16, 235);
-	jlgr_vos_image(jlgr, &(slider->vo[1]), rc2, jlgr->textures.game, 1.);
-	jl_gl_vo_txmap(jlgr, &(slider->vo[1]), 	16, 16, 16);
+	jlgr_vo_set_image(jlgr, &(slider->vo[0]), rc, jlgr->textures.font);
+	jlgr_vo_txmap(jlgr, &(slider->vo[0]), 	16, 16, 235);
+	jlgr_vo_set_image(jlgr, &(slider->vo[1]), rc2, jlgr->textures.game);
+	jlgr_vo_txmap(jlgr, &(slider->vo[1]), 	16, 16, 16);
 	
-	jlgr_vos_rec(jlgr, &(slider->vo[2]), rc1, colors, 0);
+	jlgr_vo_set_rect(jlgr, &(slider->vo[2]), rc1, colors, 0);
 	// Draw Sliders
-	jlgr_draw_vo(jlgr, &(slider->vo[0]), NULL);
+	jlgr_vo_draw(jlgr, &(slider->vo[0]), NULL);
 	// Draw Slide 1
-	jlgr_draw_vo(jlgr, &(slider->vo[2]), &slider->where[0]);
-	jlgr_draw_vo(jlgr, &(slider->vo[1]), &slider->where[0]);
+	jlgr_vo_draw(jlgr, &(slider->vo[2]), &slider->where[0]);
+	jlgr_vo_draw(jlgr, &(slider->vo[1]), &slider->where[0]);
 	// Draw Slide 2
-	jlgr_draw_vo(jlgr, &(slider->vo[2]), &slider->where[1]);
-	jlgr_draw_vo(jlgr, &(slider->vo[1]), &slider->where[1]);
+	jlgr_vo_draw(jlgr, &(slider->vo[2]), &slider->where[1]);
+	jlgr_vo_draw(jlgr, &(slider->vo[1]), &slider->where[1]);
 }
 
 /**
@@ -394,9 +246,9 @@ void jlgr_gui_slider(jlgr_t* jlgr, jl_sprite_t* sprite, jl_rect_t rectangle,
 	slider.x1 = x1, slider.x2 = x2;
 	(*slider.x1) = 0.;
 	(*slider.x2) = 1.;
-	jl_gl_vo_init(jlgr, &slider.draw.vo[0]);
-	jl_gl_vo_init(jlgr, &slider.draw.vo[1]);
-	jl_gl_vo_init(jlgr, &slider.draw.vo[2]);
+	jlgr_vo_init(jlgr, &slider.draw.vo[0]);
+	jlgr_vo_init(jlgr, &slider.draw.vo[1]);
+	jlgr_vo_init(jlgr, &slider.draw.vo[2]);
 	slider.isRange = isdouble;
 
 	jlgr_sprite_init(jlgr, sprite, rectangle,
@@ -409,7 +261,7 @@ void jlgr_gui_slider(jlgr_t* jlgr, jl_sprite_t* sprite, jl_rect_t rectangle,
  * Draw a background on the screen
 **/
 void jlgr_draw_bg(jlgr_t* jlgr, uint32_t tex, uint8_t w, uint8_t h, int16_t c) {
-	jlgr_fill_image_set(jlgr, tex, w, h, c, 1.);
+	jlgr_fill_image_set(jlgr, tex, w, h, c);
 	jlgr_fill_image_draw(jlgr);
 }
 
@@ -418,7 +270,7 @@ void jlgr_draw_loadingbar(jlgr_t* jlgr, double loaded) {
 		.95,jl_gl_ar(jlgr)*.45};
 	float colors[] = { 0., 1., 0., 1. };
 
-	jlgr_vos_rec(jlgr, NULL, bar, colors, 0);
+	jlgr_vo_set_rect(jlgr, NULL, bar, colors, 0);
 }
 
 //TODO: MOVE
@@ -511,9 +363,11 @@ void jlgr_popup(jlgr_t* jlgr, char *name, char *message,
 
 /**
  * Re-draw/-size a slide button, and activate if it is pressed.
- * @param 'txt': the text to draw on the button.
+ * @param jlgr: The library context.
+ * @param spr: The slide button sprite.
+ * @param txt: The text to draw on the button.
 **/
-void jlgr_slidebtn_rsz(jlgr_t* jlgr, jl_sprite_t * spr, str_t txt) {
+void jlgr_slidebtn_rsz(jlgr_t* jlgr, jl_sprite_t * spr, const char* txt) {
 	jlgr_draw_text_sprite(jlgr, spr, txt);
 }
 
@@ -555,10 +409,10 @@ void jlgr_glow_button_draw(jlgr_t* jlgr, jl_sprite_t * spr,
 		float glow_color[] = { 1., 1., 1., .25 };
 
 		// Draw glow
-		jlgr_vos_rec(jlgr, &jlgr->gl.temp_vo, rc, glow_color, 0);
-		jlgr_draw_vo(jlgr, &jlgr->gl.temp_vo, NULL);
+		jlgr_vo_set_rect(jlgr, &jlgr->gl.temp_vo, rc, glow_color, 0);
+		jlgr_vo_draw(jlgr, &jlgr->gl.temp_vo, NULL);
 		// Description
-		jlgr_draw_text(jlgr, txt,
+		jlgr_text_draw(jlgr, txt,
 			(jl_vec3_t)
 				{0., jl_gl_ar(jlgr) - .0625, 0.},
 			(jl_font_t) { jlgr->textures.icon, 0,
@@ -596,7 +450,7 @@ uint8_t jlgr_draw_textbox(jlgr_t* jlgr, float x, float y, float w,
 	}
 	jlgr_input_do(jlgr, JL_INPUT_JOYC, _jlgr_textbox_cm, NULL);
 //		jlgr_draw_image(jl, 0, 0, x, y, w, h, ' ', 1.);
-	jlgr_draw_text(jlgr, (char*)(string->data),
+	jlgr_text_draw(jlgr, (char*)(string->data),
 		(jl_vec3_t) {x, y, 0.},
 		(jl_font_t) {jlgr->textures.icon,0,jlgr->fontcolor,h});
 //		jlgr_draw_image(jl, 0, 0,
@@ -610,7 +464,7 @@ uint8_t jlgr_draw_textbox(jlgr_t* jlgr, float x, float y, float w,
  * @param jl: the libary context
  * @param notification: The message to display.
 */
-void jlgr_notify(jlgr_t* jlgr, str_t notification) {
+void jlgr_notify(jlgr_t* jlgr, const char* notification) {
 	jlgr_comm_notify_t packet;
 	packet.id = JLGR_COMM_NOTIFY;
 	jl_mem_copyto(notification, packet.string, 256);
@@ -686,7 +540,3 @@ void jlgr_init__(jlgr_t* jlgr) {
 
 /**      @endcond      **/
 /***   #End of File   ***/
-
-uint8_t* jlgr_load_image(jl_t* jl, data_t* data, uint16_t* w, uint16_t* h) {
-	return jl_vi_load_(jl, data, w, h);
-}

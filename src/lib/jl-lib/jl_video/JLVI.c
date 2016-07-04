@@ -1,10 +1,13 @@
 /*
-	JAL5_VIDE
-
-		VIDE is for editing sounds and graphics.
+ * JL_lib
+ * Copyright (c) 2015 Jeron A. Lau 
 */
-#include "JLGRinternal.h"
-
+/** \file
+ * JLVI.c
+ * 	This module edits sounds and graphics.
+ */
+#include "JLGRprivate.h"
+#include "SDL_image.h"
 #undef HAVE_STDLIB_H
 #include "jpeglib.h"
 
@@ -20,7 +23,7 @@ typedef long unsigned int jpeg_long_int_t;
  * @param h: THe height
  * @returns: The data.
 **/
-void jl_vi_make_jpeg(jl_t* jl, data_t* rtn, uint8_t quality, uint8_t* pxdata,
+void jlvi_make_jpeg(jl_t* jl, data_t* rtn, uint8_t quality, uint8_t* pxdata,
 	uint16_t w, uint16_t h)
 {
 	uint8_t* data = NULL;
@@ -131,7 +134,7 @@ void jl_vi_make_jpeg(jl_t* jl, data_t* rtn, uint8_t quality, uint8_t* pxdata,
  * @param h: Pointer to the height variable.
  * @returns: Raw pixel data.
 **/
-uint8_t* jl_vi_load_(jl_t* jl, data_t* data, uint16_t* w, uint16_t* h) {
+uint8_t* jlvi_load_image(jl_t* jl, data_t* data, uint16_t* w, uint16_t* h) {
 	SDL_Surface *image; //  Free'd by SDL_free(image);
 	SDL_RWops *rw; // Free'd by SDL_RWFromMem
 	void* img_file; // Free'd by jl_mem

@@ -1,4 +1,4 @@
-#include "jl_pr.h"
+#include "JLprivate.h"
 
 #if JL_PLAT == JL_PLAT_PHONE
 	#include <jni.h>
@@ -28,7 +28,9 @@ static inline void jl_init_libs__(jl_t* jl) {
 //	jlgr_draw_msge(_jl->jl, 0, 0, 0, "INITIALIZATION COMPLETE!");
 }
 
-static inline void jl_init__(jl_t* jl,jl_fnct _fnc_init_,str_t nm,uint64_t ctx1s) {
+static inline void jl_init__(jl_t* jl, jl_fnct _fnc_init_, const char* nm,
+	uint64_t ctx1s)
+{
 	//
 	jl->loop = main_loop_;
 	JL_PRINT_DEBUG(jl, "Initializing subsystems....");

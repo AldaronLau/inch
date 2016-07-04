@@ -1,4 +1,5 @@
-#include "JLGRinternal.h"
+#include "JLGRprivate.h"
+#include "SDL_filesystem.h"
 
 static char* jlgr_file_fullname__(jlgr_t* jlgr, char* selecteddir,
 	char* selecteditem)
@@ -30,7 +31,7 @@ static void jl_fl_user_select_check_extradir__(char *dirname) {
 static uint8_t jl_fl_user_select_open_dir__(jlgr_t* jlgr, char *dirname) {
 	DIR *dir;
 	struct dirent *ent;
-	str_t converted_filename;
+	const char* converted_filename;
 
 	jl_fl_user_select_check_extradir__(dirname);
 	if(dirname[1] == '\0') {
@@ -96,8 +97,8 @@ static uint8_t jl_fl_user_select_open_dir__(jlgr_t* jlgr, char *dirname) {
  * @returns 0: if can't open the directory. ( Doesn't exist, Bad permissions )
  * @returns 1: on success.
 **/
-uint8_t jlgr_openfile_init(jlgr_t* jlgr, str_t program_name, void *newfiledata,
-	uint64_t newfilesize)
+uint8_t jlgr_openfile_init(jlgr_t* jlgr, const char* program_name,
+	void *newfiledata, uint64_t newfilesize)
 {
 	jlgr->fl.returnit = 0;
 	jlgr->fl.inloop = 1;
@@ -202,9 +203,9 @@ void jlgr_openfile_loop(jlgr_t* jlgr) {
 
 	iterator = cl_list_iterator_create(jlgr->fl.filelist);
 
-	jlgr_fill_image_set(jlgr, jlgr->textures.icon, 16, 16, 1, 1.);
+	jlgr_fill_image_set(jlgr, jlgr->textures.icon, 16, 16, 1);
 	jlgr_fill_image_draw(jlgr);
-	jlgr_draw_text(jlgr, "Select File", (jl_vec3_t) { .02, .02, 0. },
+	jlgr_text_draw(jlgr, "Select File", (jl_vec3_t) { .02, .02, 0. },
 		jlgr->font);
 
 	jlgr_input_do(jlgr, JL_INPUT_JOYC, jl_fl_user_select_dir__, NULL);
@@ -217,7 +218,7 @@ void jlgr_openfile_loop(jlgr_t* jlgr) {
 			stringtoprint = "//this folder//";
 		}
 		if(i - (jlgr->fl.cpage * (jlgr->fl.drawupto+1)) >= 0)
-			jlgr_draw_text(jlgr, stringtoprint, (jl_vec3_t) {
+			jlgr_text_draw(jlgr, stringtoprint, (jl_vec3_t) {
 				.06,
 				.08 + (jlgr->font.size *
 					(i - (jlgr->fl.cpage * (
@@ -252,10 +253,10 @@ void jlgr_openfile_loop(jlgr_t* jlgr) {
 			jlgr->fl.prompt = 0;
 		}
 	}else{
-		jlgr_draw_text(jlgr, ">", (jl_vec3_t) {
+		jlgr_text_draw(jlgr, ">", (jl_vec3_t) {
 			.02, .08 + (.04 * jlgr->fl.cursor), 0. },
 			jlgr->font);
-		jlgr_draw_text(jlgr, jlgr->fl.dirname,
+		jlgr_text_draw(jlgr, jlgr->fl.dirname,
 			(jl_vec3_t) { .02, jl_gl_ar(jlgr) - .02, 0. },
 			(jl_font_t) { jlgr->textures.icon, 0,
 				jlgr->fontcolor, .02});
@@ -267,10 +268,10 @@ void jlgr_openfile_loop(jlgr_t* jlgr) {
 
 /**
  * Get the results from the file viewer.
- * @param jl: Library Context.
+ * @param jlgr: Library Context.
  * @returns: If done, name of selected file.  If not done, NULL is returned.
 **/
-str_t jlgr_openfile_kill(jlgr_t* jlgr) {
+const char* jlgr_openfile_kill(jlgr_t* jlgr) {
 	if(jlgr->fl.returnit)
 		return jlgr->fl.dirname;
 	else
@@ -295,9 +296,9 @@ static void jl_fl_btn_makefile_draw__(jl_t* jl, uint8_t resize, void* ctx) {
 	jl_rect_t rc = { 0., 0., jl_gl_ar(jlgr), jl_gl_ar(jlgr) };
 	jl_vec3_t tr = { 0., 0., 0. };
 
-	jlgr_vos_image(jlgr, &jlgr->gl.temp_vo, rc, jlgr->textures.icon, 1.);
-	jl_gl_vo_txmap(jlgr, &jlgr->gl.temp_vo, 16, 16, 9);
-	jlgr_draw_vo(jlgr, &jlgr->gl.temp_vo, &tr);
+	jlgr_vo_set_image(jlgr, &jlgr->gl.temp_vo, rc, jlgr->textures.icon);
+	jlgr_vo_txmap(jlgr, &jlgr->gl.temp_vo, 16, 16, 9);
+	jlgr_vo_draw(jlgr, &jlgr->gl.temp_vo, &tr);
 }
 
 static void jl_fl_btn_makefolder_loop__(jl_t* jl, jl_sprite_t* sprite) {
@@ -313,9 +314,9 @@ static void jl_fl_btn_makefolder_draw__(jl_t* jl, uint8_t resize, void* ctx) {
 	jl_rect_t rc = { 0., 0., jl_gl_ar(jlgr), jl_gl_ar(jlgr) };
 	jl_vec3_t tr = { 0., 0., 0. };
 
-	jlgr_vos_image(jlgr, &jlgr->gl.temp_vo, rc, jlgr->textures.icon, 1.);
-	jl_gl_vo_txmap(jlgr, &jlgr->gl.temp_vo, 16, 16, 10);
-	jlgr_draw_vo(jlgr, &jlgr->gl.temp_vo, &tr);
+	jlgr_vo_set_image(jlgr, &jlgr->gl.temp_vo, rc, jlgr->textures.icon);
+	jlgr_vo_txmap(jlgr, &jlgr->gl.temp_vo, 16, 16, 10);
+	jlgr_vo_draw(jlgr, &jlgr->gl.temp_vo, &tr);
 }
 
 void jlgr_fl_init(jlgr_t* jlgr) {

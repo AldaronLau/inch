@@ -1,5 +1,13 @@
-#include "JLgr.h"
-#include "jl_pr.h"
+#include "jlgr.h"
+#include "JLprivate.h"
+
+// Full texture
+#define DEFAULT_TC (const float[]) { \
+	0., 1., \
+	0., 0., \
+	1., 0., \
+	1., 1. \
+}
 
 typedef enum{
 	JLGR_ID_NULL,
@@ -26,26 +34,29 @@ typedef struct{
 
 uint32_t _jl_sg_gpix(/*in */ SDL_Surface* surface, int32_t x, int32_t y);
 void jl_gl_viewport_screen(jlgr_t* jlgr);
-void jl_gl_poly(jlgr_t* jlgr, jl_vo_t* pv, uint32_t vertices, const float *xyzw);
-void jl_gl_vect(jlgr_t* jlgr, jl_vo_t* pv, uint32_t vertices, const float *xyzw);
-void jl_gl_txtr_(jlgr_t* jlgr, jl_vo_t* vo, float a, uint32_t tx);
-void jl_gl_transform_pr_(jlgr_t* jlgr, jl_pr_t* pr, float x, float y, float z,
-	float xm, float ym, float zm);
-void jl_gl_transform_vo_(jlgr_t* jlgr, jl_vo_t* vo, float x, float y, float z,
-	float xm, float ym, float zm);
-void jl_gl_transform_chr_(jlgr_t* jlgr, float x, float y, float z,
-	float xm, float ym, float zm);
-void jl_gl_draw(jlgr_t* jlgr, jl_vo_t* pv);
-void jl_gl_draw_chr(jlgr_t* jlgr, jl_vo_t* pv,
-	float r, float g, float b, float a);
-void jl_gl_draw_pr_(jl_t* jlc, jl_pr_t* pr);
+void jlgr_opengl_transform_(jlgr_t* jlgr, jlgr_glsl_t* sh,
+	float xe, float ye, float ze, float xm, float ym, float zm, float ar);
 void jl_gl_vo_free(jlgr_t* jlgr, jl_vo_t *pv);
 uint32_t jl_gl_w(jlgr_t* jlgr);
+
+// JLGRopengl.c
+void jlgr_opengl_buffer_set_(jlgr_t* jlgr, GLuint *buffer,
+	const void *buffer_data, uint16_t buffer_size);
+void jlgr_opengl_buffer_old_(jlgr_t* jlgr, uint32_t *buffer);
+void jlgr_opengl_uniform1f_(jlgr_t* jlgr, GLint uv, float a);
+void jlgr_opengl_uniform3f_(jlgr_t* jlgr, GLint uv, float x, float y, float z);
+void jlgr_opengl_uniform4f_(jlgr_t* jlgr, GLint uv, float x, float y, float z,
+	float w);
+void jlgr_opengl_setv(jlgr_t* jlgr, uint32_t* buff, uint32_t vertexAttrib,
+	uint8_t xyzw);
+void jlgr_opengl_vertices_(jlgr_t* jlgr, const float *xyzw, uint8_t vertices,
+	float* cv, uint32_t* gl);
+void jlgr_opengl_texture_bind_(jlgr_t* jlgr, uint32_t tex);
+void jlgr_opengl_draw_arrays_(jlgr_t* jlgr, GLenum mode, uint8_t count);
 
 //DL
 void _jl_sg_loop(jlgr_t* jlgr);
 float jl_sg_seconds_past_(jl_t* jlc);
-uint8_t* jl_vi_load_(jl_t* jlc, data_t* data, uint16_t* w, uint16_t* h);
 
 // Resize function
 void jl_wm_resz__(jlgr_t* jlgr, uint16_t x, uint16_t y);

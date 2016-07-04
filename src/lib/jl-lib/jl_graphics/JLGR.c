@@ -7,7 +7,7 @@
  *	A High Level Graphics Library that supports sprites, texture loading,
  *	2D rendering & 3D rendering.
  */
-#include "JLGRinternal.h"
+#include "JLGRprivate.h"
 
 static void jlgr_loop_(jl_t* jl) {
 	jlgr_t* jlgr = jl->jlgr;

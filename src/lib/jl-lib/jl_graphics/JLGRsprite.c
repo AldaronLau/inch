@@ -6,7 +6,7 @@
  * JLGRsprite.c
  *	Handles the sprites.
  */
-#include "JLGRinternal.h"
+#include "JLGRprivate.h"
 
 static void jlgr_sprite_draw_to_pr__(jl_t *jl) {
 	jl_sprite_t *sprite = jl_mem_temp(jl, NULL);
@@ -16,7 +16,7 @@ static void jlgr_sprite_draw_to_pr__(jl_t *jl) {
 
 static void jlgr_sprite_redraw_tex__(jlgr_t* jlgr, jl_sprite_t *spr) {
 	jl_mem_temp(jlgr->jl, spr);
-	jl_gl_pr(jlgr, &spr->pr, jlgr_sprite_draw_to_pr__);
+	jlgr_pr(jlgr, &spr->pr, jlgr_sprite_draw_to_pr__);
 }
 
 // Redraw a sprite
@@ -78,7 +78,7 @@ void jlgr_sprite_draw(jlgr_t* jlgr, jl_sprite_t *spr) {
 
 	// Redraw if needed.
 	if(spr->update) jlgr_sprite_redraw__(jlgr, spr);
-	jl_gl_pr_draw(jlgr, &spr->pr, &spr->pr.cb.pos, &spr->pr.scl);
+	jlgr_pr_draw(jlgr, &spr->pr, &spr->pr.cb.pos, &spr->pr.scl);
 /*	jl_gl_transform_pr_(jlgr, &spr->pr,
 		spr->pr.cb.pos.x, spr->pr.cb.pos.y, spr->pr.cb.pos.z,
 		spr->pr.scl.x, spr->pr.scl.y, spr->pr.scl.z);
@@ -105,7 +105,7 @@ void jlgr_sprite_resize(jlgr_t* jlgr, jl_sprite_t *spr, jl_rect_t* rc) {
 		spr->rh = rc->h;
 	}
 	// Resize
-	jl_gl_pr_rsz(jlgr, &spr->pr, spr->rw, spr->rh, jl_gl_w(jlgr) * spr->rw);
+	jlgr_pr_resize(jlgr, &spr->pr, spr->rw, spr->rh, jl_gl_w(jlgr) * spr->rw);
 	// Redraw
 	jlgr_sprite_redraw_tex__(jlgr, spr);
 	//
@@ -146,7 +146,7 @@ void jlgr_sprite_init(jlgr_t* jlgr, jl_sprite_t* sprite, jl_rect_t rc,
 	sprite->rw = rc.w;
 	sprite->rh = rc.h;
 	// Make pre-renderer
-	jl_gl_pr_new(jlgr, &sprite->pr, rc.w, rc.h, jl_gl_w(jlgr) * sprite->rw);
+	jlgr_pr_init(jlgr, &sprite->pr, rc.w, rc.h, jl_gl_w(jlgr) * sprite->rw);
 	// Set collision box.
 	sprite->pr.cb.pos.x = rc.x; sprite->pr.cb.pos.y = rc.y;
 	sprite->pr.cb.ofs.x = rc.w; sprite->pr.cb.ofs.y = rc.h;

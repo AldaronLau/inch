@@ -1,4 +1,4 @@
-#include "jl_pr.h"
+#include "JLprivate.h"
 
 //
 // Internal Functions
@@ -64,7 +64,7 @@ void jl_data_mkfrom_data(jl_t* jl, data_t* a, uint32_t size, const void *data) {
  * @param string: String to convert
  * @returns: new "strt" with same contents as "string".
 */
-void jl_data_mkfrom_str(data_t* a, str_t string) {
+void jl_data_mkfrom_str(data_t* a, const char* string) {
 	return jl_data_mkfrom_data(NULL, a, strlen(string), string);
 }
 
@@ -248,7 +248,7 @@ char* jl_data_tostring(jl_t* jl, data_t* a) {
  * @return 1: If particle is at the cursor.
  * @return 0: If particle is not at the cursor.
 */
-uint8_t jl_data_test_next(data_t* script, str_t particle) {
+uint8_t jl_data_test_next(data_t* script, const char* particle) {
 	char * point = (void*)script->data + script->curs; //the cursor
 	char * place = strstr(point, particle); //search for partical
 	if(place == point) {//if partical at begining return true otherwise false

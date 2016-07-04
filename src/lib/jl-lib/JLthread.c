@@ -6,7 +6,7 @@
  * JLthread.c
  *	This file handles a separate thread for drawing graphics.
 **/
-#include "jl_pr.h"
+#include "JLprivate.h"
 
 //
 // Static Functions
@@ -28,7 +28,7 @@ static void jl_thread_init_new(jl_t* jl, uint8_t thread_id) {
  * @param fn: The main function of the thread.
  * @returns: The thread ID number.
 **/
-uint8_t jl_thread_new(jl_t *jl, str_t name, SDL_ThreadFunction fn) {
+uint8_t jl_thread_new(jl_t *jl, const char* name, SDL_ThreadFunction fn) {
 	int8_t i, rtn = -1;
 
 	// Skip main thread ( i = 1 )

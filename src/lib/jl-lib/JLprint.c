@@ -8,7 +8,7 @@
  *	trace.
 **/
 
-#include "jl_pr.h"
+#include "JLprivate.h"
 
 static void _jl_print_current(jl_t *jl, uint8_t thread_id) {
 	int i;
@@ -88,7 +88,7 @@ static void jl_print_reset_print_descriptor_(jl_t* jl, uint8_t thread_id) {
 	jl_print_descriptor_(jl, thread_id);
 }
 
-static void jl_print_toconsole__(jl_t* jl, str_t input) {
+static void jl_print_toconsole__(jl_t* jl, const char* input) {
 	uint8_t thread_id = jl_thread_current(jl);
 	int i = 0;
 	char buffer[256];
@@ -96,7 +96,7 @@ static void jl_print_toconsole__(jl_t* jl, str_t input) {
 
 	jl_mem_copyto(input, buffer, strlen(input) + 1);
 	while(i != -1) {
-		str_t text = buffer + (80 * i);
+		const char* text = buffer + (80 * i);
 		// If string is empty; quit
 		if((!text) || (!text[0])) break;
 		// Clear and reset the print buffer
@@ -137,7 +137,7 @@ void jl_print_set(jl_t* jl, jl_print_fnt fn_) {
 		jl->print.printfn = jl_print_toconsole__;
 }
 
-static void jl_print_function__(jl_t* jl, str_t fn_name, uint8_t thread_id) {
+static void jl_print_function__(jl_t* jl,const char* fn_name,uint8_t thread_id){
 //	uint8_t thread_id = jl_thread_current(jl);
 	int size = strlen(fn_name);
 
@@ -164,7 +164,7 @@ static void jl_print_function__(jl_t* jl, str_t fn_name, uint8_t thread_id) {
  * @param jl: the library context.
  * @param format: what to print.
 */
-void jl_print(jl_t* jl, str_t format, ... ) {
+void jl_print(jl_t* jl, const char* format, ... ) {
 	char temp[256];
 	jl_thread_mutex_lock(jl, jl->print.mutex);
 
@@ -215,7 +215,7 @@ void jl_print_rewrite(jl_t* jl, const char* format, ... ) {
  * @param jl: The library context.
  * @param fn_name: The name of the block.
 **/
-void jl_print_function(jl_t* jl, str_t fn_name) {
+void jl_print_function(jl_t* jl, const char* fn_name) {
 	uint8_t thread_id = jl_thread_current(jl);
 
 	jl_thread_mutex_lock(jl, jl->print.mutex);
@@ -228,7 +228,7 @@ void jl_print_function(jl_t* jl, str_t fn_name) {
  * @param jl: The library context.
  * @param fn_name: The name of the block.
 **/
-void jl_print_return(jl_t* jl, str_t fn_name) {
+void jl_print_return(jl_t* jl, const char* fn_name) {
 	uint8_t thread_id = jl_thread_current(jl);
 
 	jl_thread_mutex_lock(jl, jl->print.mutex);

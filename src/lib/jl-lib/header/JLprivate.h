@@ -1,5 +1,7 @@
 // JL_LIB
 	#include "jl.h"
+	#include "jlau.h"
+	#include "jlgr.h"
 // Standard Libraries
 	#include <stdio.h>
 	#include <dirent.h>
@@ -40,7 +42,7 @@ void *jl_gem(void);
 uint32_t jl_gem_size(void);
 
 // Main - Prototypes
-	char* jl_file_convert__(jl_t* jl, str_t filename);
+	char* jl_file_convert__(jl_t* jl, const char* filename);
 	jl_ctx_t* jl_thread_get_safe__(jl_t* jl);
 	void main_loop_(jl_t* jl);
 

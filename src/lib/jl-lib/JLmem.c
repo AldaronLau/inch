@@ -6,7 +6,7 @@
  * the variables.  Has a specialized string type.
 */
 
-#include "jl_pr.h"
+#include "JLprivate.h"
 #include <malloc.h>
 
 /**
@@ -23,14 +23,22 @@ uint64_t jl_mem_tbiu(void) {
 	return mi.uordblks;
 }
 
+/**
+ * Start checking for memory leaks.  Pair up with 1 or multiple calls to
+ * jl_mem_leak_fail() to check for memory leaks.
+ * @param jl: The library context.
+**/
 void jl_mem_leak_init(jl_t* jl) {
 	jl->info = jl_mem_tbiu();
 }
 
 /**
  * Exit if there's been a memory leak since the last call to jl_mem_leak_init().
+ * @param jl: The library context.
+ * @param fn_name: Recommended that it is the name of function that leak could
+ * happen in, but can be whatever you want.
 **/
-void jl_mem_leak_fail(jl_t* jl, str_t fn_name) {
+void jl_mem_leak_fail(jl_t* jl, const char* fn_name) {
 	if(jl_mem_tbiu() != jl->info) {
 		jl_print(jl, "%s: Memory Leak Fail", fn_name);
 		exit(-1);
@@ -123,10 +131,11 @@ void *jl_mem_copy(jl_t* jl, const void *src, uint64_t size) {
 
 /**
  * Format a string.
- * @param rtn: Variable to put formated string ( size is 80 bytes )
+ * @param rtn: A variable to put the formated string.  It is assumed the size is
+ *	80 bytes ( char rtn[80] )
  * @param format: The format string, can include %s, %f, %d, etc.
 **/
-void jl_mem_format(char* rtn, str_t format, ... ) {
+void jl_mem_format(char* rtn, const char* format, ... ) {
 	rtn[0] = '\0';
 	if(format) {
 		va_list arglist;

@@ -6,7 +6,9 @@
  * JLfiles.c
  * 	This allows you to modify the file system.  It uses libzip.
  */
-#include "jl_pr.h"
+/** @cond **/
+#include "JLprivate.h"
+#include "SDL_filesystem.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -23,11 +25,8 @@
 	extern const char* JL_FL_BASE;
 #endif
 
-/** @cond **/
-// Static Functions
-
 // This function converts linux filenames to native filnames
-char* jl_file_convert__(jl_t* jl, str_t filename) {
+char* jl_file_convert__(jl_t* jl, const char* filename) {
 	data_t src; jl_data_mkfrom_str(&src, filename);
 	data_t converted; jl_data_init(jl, &converted, 0);
 
@@ -68,7 +67,7 @@ static int jl_file_save_(jl_t* jl, const void *file_data, const char *file_name,
 		exit(-1);
 	}
 
-	str_t converted_filename = jl_file_convert__(jl, file_name);
+	const char* converted_filename = jl_file_convert__(jl, file_name);
 	fd = open(converted_filename, O_RDWR | O_CREAT, JL_FL_PERMISSIONS);
 
 	if(fd <= 0) {
@@ -93,7 +92,7 @@ static int jl_file_save_(jl_t* jl, const void *file_data, const char *file_name,
 	return at;
 }
 
-static inline void jl_file_reset_cursor__(str_t file_name) {
+static inline void jl_file_reset_cursor__(const char* file_name) {
 	int fd = open(file_name, O_RDWR);
 	lseek(fd, 0, SEEK_SET);
 	close(fd);
@@ -126,7 +125,7 @@ static inline void jl_file_get_root__(jl_t * jl) {
 	jl_data_free(&root_dir);
 #else
 	// Get the operating systems prefered path
-	m_str_t pref_path = SDL_GetPrefPath(JL_ROOT_DIRNAME, "\0");
+	char* pref_path = SDL_GetPrefPath(JL_ROOT_DIRNAME, "\0");
 
 	if(!pref_path) {
 		jl_print(jl, "This platform has no pref path!");
@@ -173,7 +172,7 @@ static inline void jl_file_get_errf__(jl_t * jl) {
  * @param fname: The name of the file to print to.
  * @param msg: The text to print.
 **/
-void jl_file_print(jl_t* jl, str_t fname, str_t msg) {
+void jl_file_print(jl_t* jl, const char* fname, const char* msg) {
 	// Write to the errf logfile
 	if(jl->has.filesys && fname) jl_file_save_(jl, msg, fname, strlen(msg));
 }
@@ -188,7 +187,7 @@ void jl_file_print(jl_t* jl, str_t fname, str_t msg) {
  * @returns 3: If the file exists and the user doesn't have permissions to open.
  * @returns 255: This should never happen.
 **/
-uint8_t jl_file_exist(jl_t* jl, str_t path) {
+uint8_t jl_file_exist(jl_t* jl, const char* path) {
 	DIR *dir;
 	if ((dir = opendir (path)) == NULL) {
 		//Couldn't open Directory
@@ -219,8 +218,8 @@ uint8_t jl_file_exist(jl_t* jl, str_t path) {
  * @param jl: The library context.
  * @param filename: The path of the file to delete.
 **/
-void jl_file_rm(jl_t* jl, str_t filename) {
-	str_t converted_filename = jl_file_convert__(jl, filename);
+void jl_file_rm(jl_t* jl, const char* filename) {
+	const char* converted_filename = jl_file_convert__(jl, filename);
 
 	unlink(converted_filename);
 }
@@ -233,7 +232,7 @@ void jl_file_rm(jl_t* jl, str_t filename) {
  * @param name: The Name Of The File to save to
  * @param bytes: Size of "File"
  */
-void jl_file_save(jl_t* jl, const void *file, const char *name, uint32_t bytes) {
+void jl_file_save(jl_t* jl, const void *file, const char *name, uint32_t bytes){
 	// delete file
 	jl_file_rm(jl, name);
 	// make file
@@ -247,10 +246,10 @@ void jl_file_save(jl_t* jl, const void *file, const char *name, uint32_t bytes) 
  * @param file_name: file to load
  * @returns A readable "strt" containing the bytes from the file.
  */
-void jl_file_load(jl_t* jl, data_t* load, str_t file_name) {
+void jl_file_load(jl_t* jl, data_t* load, const char* file_name) {
 	jl_file_reset_cursor__(file_name);
 	unsigned char *file = malloc(MAXFILELEN);
-	str_t converted_filename = jl_file_convert__(jl, file_name);
+	const char* converted_filename = jl_file_convert__(jl, file_name);
 	int fd = open(converted_filename, O_RDWR);
 	
 	//Open Block FLLD
@@ -294,10 +293,10 @@ void jl_file_load(jl_t* jl, data_t* load, str_t file_name) {
  * @returns 0: On success
  * @returns 1: If File is unable to be made.
  */
-char jl_file_pk_save(jl_t* jl, str_t packageFileName, str_t fileName,
-	void *data, uint64_t dataSize)
+char jl_file_pk_save(jl_t* jl, const char* packageFileName,
+	const char* fileName, void *data, uint64_t dataSize)
 {
-	str_t converted = jl_file_convert__(jl, packageFileName);
+	const char* converted = jl_file_convert__(jl, packageFileName);
 
 	jl_print_function(jl, "jl_file_pk_save");
 	JL_PRINT_DEBUG(jl, "opening \"%s\"....", converted);
@@ -386,7 +385,9 @@ static void jl_file_pk_load_quit__(jl_t* jl) {
  * @param data: The data that contains the zip file.
  * @param file_name: The name of the file to load.
 **/
-void jl_file_pk_load_fdata(jl_t* jl,data_t* rtn,data_t* data,str_t file_name) {
+void jl_file_pk_load_fdata(jl_t* jl, data_t* rtn, data_t* data,
+	const char* file_name)
+{
 	zip_error_t ze; ze.zip_err = ZIP_ER_OK;
 	zip_source_t *file_data;
 	int zerror = 0;
@@ -475,7 +476,7 @@ void jl_file_pk_load_fdata(jl_t* jl,data_t* rtn,data_t* data,str_t file_name) {
 void jl_file_pk_load(jl_t* jl, data_t* rtn, const char *packageFileName,
 	const char *filename)
 {
-	str_t converted = jl_file_convert__(jl, packageFileName);
+	const char* converted = jl_file_convert__(jl, packageFileName);
 
 	jl->errf = JL_ERR_NERR;
 	jl_print_function(jl, "FL_PkLd");
@@ -601,38 +602,6 @@ struct cl_list * jl_file_dir_ls(jl_t* jl,const char* dirname,uint8_t recursive){
 }
 
 /**
- * Create the media package file & load a file from it.
- * @param jl: library context
- * @param c: the data contents of the file.
- * @param pfilebase: name of file to load from package
- * @param pzipfile: the name of the zipfile to create.
- * @param contents: the contents to put in the file
- * @param size: the size (in bytes) of the contents.
-*/
-void jl_file_mkfile(jl_t* jl, data_t* dc, str_t pzipfile, str_t pfilebase,
-	char *contents, uint32_t size)
-{
-//	if(!pfilebase) { return; }
-
-	//Create Block "MKFL"
-	jl_print_function(jl, "FL_MkFl");
-
-	JL_PRINT_DEBUG(jl, "Creating File....");
-	jl_file_save(jl, contents, pzipfile, size);
-	JL_PRINT_DEBUG(jl, "Try loading....");
-	jl_file_pk_load(jl, dc, pzipfile, pfilebase);
-	if(jl->errf == JL_ERR_FIND)//Package still doesn't exist!!
-	{
-		JL_PRINT_DEBUG(jl, "Failed To Create file");
-		jl_print_return(jl, "FL_MkFl");
-		exit(-1);
-	}
-	JL_PRINT_DEBUG(jl, "Good loading! / File Made!");
-	//Close Block "MKFL"
-	jl_print_return(jl, "FL_MkFl");
-}
-
-/**
  * Get the designated location for a resource file. Resloc = Resource Location
  * @param jl: Library Context.
  * @param prg_folder: The name of the folder for all of the program's resources.
@@ -644,7 +613,7 @@ void jl_file_mkfile(jl_t* jl, data_t* dc, str_t pzipfile, str_t pfilebase,
  * @param fname: Name Of Resource Pack
  * @returns: The designated location for a resouce pack
 */
-str_t jl_file_get_resloc(jl_t* jl, str_t prg_folder, str_t fname) {
+char* jl_file_get_resloc(jl_t* jl, const char* prg_folder, const char* fname) {
 	data_t filesr; jl_data_mkfrom_str(&filesr, JL_FILE_SEPARATOR);
 	data_t pfstrt; jl_data_mkfrom_str(&pfstrt, prg_folder);
 	data_t fnstrt; jl_data_mkfrom_str(&fnstrt, fname);
@@ -660,7 +629,7 @@ str_t jl_file_get_resloc(jl_t* jl, str_t prg_folder, str_t fname) {
 	// Append 'filesr' onto 'resloc'
 	jl_data_merg(jl, &resloc, &filesr);
 	// Make 'prg_folder' if it doesn't already exist.
-	if( jl_file_dir_mk(jl, (str_t) resloc.data) == 2 ) {
+	if( jl_file_dir_mk(jl, (char*) resloc.data) == 2 ) {
 		jl_print(jl, "jl_file_get_resloc: couldn't make \"%s\"",
 			(char*) resloc.data);
 		jl_print(jl, "mkdir : Permission Denied");
@@ -693,7 +662,7 @@ void jl_file_init_(jl_t * jl) {
 	//
 	jl->has.filesys = 1;
 
-	str_t pkfl = jl_file_get_resloc(jl, JL_MAIN_DIR, JL_MAIN_MEF);
+	const char* pkfl = jl_file_get_resloc(jl, JL_MAIN_DIR, JL_MAIN_MEF);
 	remove(pkfl);
 
 	truncate(jl->fl.paths.errf, 0);

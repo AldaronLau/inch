@@ -6,7 +6,7 @@
  * devices.
 */
 
-#include "JLGRinternal.h"
+#include "JLGRprivate.h"
 
 #if JL_PLAT == JL_PLAT_COMPUTER
 	#define SDL_MENU_KEY SDL_SCANCODE_APPLICATION

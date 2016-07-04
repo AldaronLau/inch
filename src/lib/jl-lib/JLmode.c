@@ -7,7 +7,7 @@
  *	Handles things called modes.  An example is: your title screen
  *	of a game and the actual game would be on different modes.
 **/
-#include "jl_pr.h"
+#include "JLprivate.h"
 
 //
 // Static functions.

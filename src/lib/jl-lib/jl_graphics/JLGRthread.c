@@ -6,7 +6,7 @@
  * JLGRthread.c
  *	This file handles a separate thread for drawing graphics.
 **/
-#include "JLGRinternal.h"
+#include "JLGRprivate.h"
 
 static void jlgr_thread_programsresize(jlgr_t* jlgr) {
 	jl_fnct resize_ = jlgr->draw.redraw.resize;
