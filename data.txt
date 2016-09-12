@@ -1,8 +1,0 @@
-	## user-name ##
-jeron
-	## package-name (program-name without spaces) ##
-inch
-	## program-name ##
-inch
-	## build with jl-lib static? ##
-true

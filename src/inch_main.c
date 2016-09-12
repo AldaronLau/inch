@@ -4,28 +4,28 @@
  * INCH: INclude C Header
 */
 
-#include "header/inch.h"
+#include "inch.h"
 
 char* inputfile = NULL;
 
 static void inch_init(jl_t* jl) {
 	char* zipfile;
 
-	jl_print(jl, "INCH: INclude media as C Header V0.4");
-	zipfile = inch_conv_package(jl, inputfile);
+	la_print(LA_PBOLD LA_PBLINK LA_PGREEN "INCH" INCH_PRESET ": " LA_PBOLD "I" INCH_PRESET "nclude media i" LA_PBOLD "N C" INCH_PRESET " & be " LA_PBOLD "H" INCH_PRESET "appy V0.5" LA_PRESET);
+	zipfile = inch_conv_package(jl, "resources");
 	inch_conv_init(jl);
-	inch_conv_conv(jl, zipfile);
+	inch_conv_conv(jl, zipfile, inputfile);
 	inch_conv_save(jl);
-	jl_print(jl, "Complete!");
 	exit(0);
 }
 
 int main(int argc, char* argv[]) {
 	if(argc != 2) {
-		printf("Use:\n\tinch -media/\n");
+		la_print("Use:\n\tinch media");
+		la_print("\t>> void* media_data(void);");
+		la_print("\t>> uint64_t media_size(void);");
 		return -1;
 	}
 	inputfile = argv[1];
-	if(inputfile[0] == '-') inputfile[0] = '!';
-	return jl_start(inch_init, "inch", sizeof(inch_t));
+	return la_start(inch_init, la_dont, 0, "inch", sizeof(inch_t));
 }
